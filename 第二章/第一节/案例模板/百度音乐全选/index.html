@@ -1,0 +1,186 @@
+<!--
+ * @Date: 2021-03-23 21:14:16
+ * @Description: 
+ * @Author: 
+ * @LastEditors: YooHoeh
+ * @LastEditTime: 2021-03-24 21:52:19
+-->
+<!-- 
+在课堂代码基础上实现《百度音乐排行榜单》全选/全不选、删除选中音乐及音乐添加功能。
+
+要求：一 、全选/全不选功能包括
+
+                  1.选中全选/全不选按钮自动勾选音乐列表全选/全不选
+
+                  2.音乐列表中全选会触发全选按钮自动勾选
+
+                  3.音乐列表中有一个未勾选会触发全选按钮取消勾选
+
+            二、在input框中输入音乐标题会添加到音乐列表中
+
+通过标准：完成以上所有任务及所有要求，方可通过。备注：允许有逻辑错误，不允许有语法错误。
+ -->
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+        <title>Document</title>
+        <link rel="stylesheet" href="./index.css" />
+    </head>
+
+    <body>
+        <section id="wrap">
+            <h2 class="title">百度音乐榜单</h2>
+            <ul id="list"></ul>
+
+            <footer class="footer">
+                <label
+                    ><input type="checkbox" id="checkAll" />全选/全不选</label
+                >
+                <a href="javascript:;" id="remove">删除</a>
+                <input type="text" id="newInfo" />
+                <a href="javascript:;" id="add">添加</a>
+            </footer>
+        </section>
+
+        <h2>
+            不太清楚怎么使用symbol做uuid。希望老师可以帮忙看一下这里需要怎么改
+        </h2>
+
+        <template id="li-temp">
+            <li>
+                <input type="checkbox" class="check" />
+                <span></span>
+                <a href="javascript:;" class="toggle-like"></a>
+                <a href="javascript:;" class="remove">删除</a>
+            </li>
+        </template>
+
+        <script>
+            {
+                /**  data set */
+                let dataList = [
+                    { value: 111, id: 1, like: true, checked: false },
+                    { value: 222, id: 2, like: false, checked: true },
+                    { value: 333, id: 3, like: true, checked: false },
+                    { value: 444, id: 4, like: false, checked: false },
+                    { value: 555, id: 5, like: true, checked: true },
+                ];
+
+                /**  get ele */
+                const ul = document.querySelector("#list");
+                const newInput = document.querySelector("#newInfo");
+                const addBtn = document.querySelector("#add");
+                const allBtn = document.querySelector("#checkAll");
+                const toggleLikeBtn = document.querySelector(".toggle-like");
+                const removeBtn = document.querySelector(".remove");
+                const removeAllBtn = document.querySelector("#remove");
+
+                /**  methods */
+
+                //create li
+                const createLi = (item) => {
+                    const { value, checked, like, id } = item;
+                    const liTemplate = document.querySelector("#li-temp");
+                    const clone = document.importNode(liTemplate.content, true);
+
+                    const li = clone.querySelector("li");
+                    const span = clone.querySelector("span");
+                    const input = clone.querySelector("input");
+                    const toggleLike = clone.querySelector(".toggle-like");
+
+                    //id
+                    li.setAttribute("data-id", id);
+                    // title
+                    span.textContent = value;
+                    // checked
+                    checked && input.setAttribute("checked", "checked");
+                    // like
+                    toggleLike.textContent = like ? "取消收藏" : "收藏";
+
+                    return clone;
+                };
+
+                // render
+                const render = function () {
+                    const fragment = document.createDocumentFragment();
+                    dataList.map((i) => fragment.appendChild(createLi(i)));
+                    ul.innerHTML = "";
+                    ul.append(fragment);
+                };
+
+                /** events bind */
+                const bindEvent = function ({ target }) {
+                    const { parentElement, className } = target;
+                    const { id } = parentElement.dataset;
+                    console.warn(parentElement, id);
+                    if (target && className && id) {
+                        switch (className) {
+                            case "remove":
+                                dataList = dataList.filter((i) => i.id != id);
+                                break;
+                            case "check":
+                                dataList = dataList.map((i) => {
+                                    if (i.id == id) {
+                                        i.checked = !i.checked;
+                                    }
+                                    return i;
+                                });
+                                // 是否已经全选
+                                allBtn.checked = dataList.every(
+                                    (i) => i.checked
+                                );
+                                break;
+                            case "toggle-like":
+                                dataList = dataList.map((i) => {
+                                    if (i.id == id) {
+                                        i.like = !i.like;
+                                    }
+                                    return i;
+                                });
+                                break;
+                            default:
+                                break;
+                        }
+                        render();
+                    }
+                };
+                ul.addEventListener("click", bindEvent);
+
+                // add
+                addBtn.addEventListener("click", function () {
+                    // !!不太清楚怎么使用symbol做uuid。希望老师可以帮忙看一下这里需要怎么改!!
+                    dataList.push({
+                        value: newInput.value,
+                        like: false,
+                        checked: false,
+                        id: `id_${newInput.value + new Date().getTime()}`,
+                    });
+                    newInput.value = "";
+                    render();
+                });
+
+                // check all
+                allBtn.addEventListener("click", function () {
+                    // 是否已经全选
+                    const isAllSelected = dataList.every((i) => i.checked);
+                    dataList = dataList.map((i) => {
+                        i.checked = !isAllSelected;
+                        return i;
+                    });
+                    render();
+                });
+
+                // multi remove
+                removeAllBtn.addEventListener("click", function () {
+                    dataList = dataList.filter((i) => !i.checked);
+                    render();
+                });
+
+                render();
+            }
+        </script>
+    </body>
+</html>
